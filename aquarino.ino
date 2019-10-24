@@ -14,7 +14,7 @@
  * PIN AANSLUITINGEN 1-wire SENSOR
  *
  * GND  --> GND (zwart)
- * Data --> D3  (geel)
+ * Data --> D6  (geel)
  * Vcc  --> 5V  (rood)
  *
  * 4K7 (4700) Ohm weerstand tussen 5V en Data pin
@@ -27,8 +27,8 @@
  *
  * GND --> GND (wit)
  * VCC --> 5V  (grijs)
- * SDA --> A4  (rood)
- * SCL --> A5  (blauw)
+ * SDA --> D2  (rood)
+ * SCL --> D1  (blauw)
  * 
  *  
  */
@@ -132,48 +132,35 @@ unsigned long previousMillisPh = 0;           // Tijdstip van laatste uitlezing 
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-static const int oneWireBus = D3;        // 1-wire pin
+static const int oneWireBus = D6;        // 1-wire pin
 OneWire oneWire(oneWireBus);            // 1-wire instantie op de oneWireBus pin
 DallasTemperature sensors(&oneWire);    // geef de instantie van de oneWire bus door aan de DallasTemperature
 
 float temperatureValue = 0.0;           // variabele om temperatuur in op te slaan (float is getal met komma)
-float temperatureMin = 100.0;           // variabele om de laagst gemeten temperatuur in op te slaan
+float temperatureMin = 0.0;           // variabele om de laagst gemeten temperatuur in op te slaan
 float temperatureMax = 0.0;             // variabele om de hoogst gemeten temperatuur in op te slaan
 
 int interval1Wire = 1000;               // Tijd in milliseconden tussen het uitlezen van de 1-wire sensor
 unsigned long previousMillis1Wire = 0;           // Tijdstip van laatste uitlezing 1-wire sensor
 
 //// WIFI (onboard ESP 8266) ////
-
-#include <ESP8266WiFi.h>
-#include <PubSubClient.h>
-
-#define ssid          "FRITZ!Box5490HB"
-#define password      "92546274353780287453"
-
-#define SERVER          "io.adafruit.com"
-#define SERVERPORT      1883
-#define MQTT_USERNAME   "ejjaquet"
-#define MQTT_KEY        "4347a23da4b7433c9b42f519b2228ab2"
-
-#define USERNAME          "ejjaquet/"
-#define PREAMBLE          "feeds/"
-#define T_PHVALUES        "phvalues"
-#define T_TEMPVALUES      "tempvalues"
-#define T_TEMPMAX         "tempmax"
-#define T_TEMPMIN         "tempmin"
-
-char valueStr[5];
-
-WiFiClient WiFiClient;
-// create MQTT object
-PubSubClient client(WiFiClient);
-
+#include "AdafruitIO_WiFi.h"
+ 
+#define WIFI_SSID       "simplewifi"
+#define WIFI_PASS       "92546274353780287453"
+ 
+#define IO_USERNAME    "ejjaquet"
+#define IO_KEY         "4347a23da4b7433c9b42f519b2228ab2"
+ 
+// Connect to Wi-Fi and Adafruit IO handel 
+AdafruitIO_WiFi io(IO_USERNAME, IO_KEY, WIFI_SSID, WIFI_PASS);
+ 
+// Create a feed object that allows us to send data to
+AdafruitIO_Feed *phFeed = io.feed("temperature");
 
 //// ALGEMEEN ////
 
 unsigned long currentMillis = 0;        // Variabele voor het aantal milliseconden sinds de Arduino is gestart
-
 
 //// FUNCTIES ////
 
@@ -181,26 +168,14 @@ void setup() {
   Serial.begin(115200);                 // stel de seriële monitor in
   delay(500);
 
-  // SETUP ADAFRUIT CONNECTOR
-  Serial.println();
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
+// Connect to Adafruit IO
+  io.connect();
+ 
+  // wait for a connection
+  while(io.status() < AIO_CONNECTED) {
+    Serial.println('.');
     delay(500);
-    Serial.print(WiFi.status());
-    Serial.print(".");
   }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  WiFi.printDiag(Serial);
-
-  client.setServer(SERVER, SERVERPORT);
 
   // LCD
   lcd.init();                           // initialiseer het LCD scherm
@@ -210,6 +185,7 @@ void setup() {
   lcd.createChar(2, temperatureIcon);   // definieer een symbool in geheugen positie 2
   lcd.createChar(3, maxIcon);           // definieer een symbool in geheugen positie 3
   lcd.createChar(4, minIcon);           // definieer een symbool in geheugen positie 4
+  lcd.clear();                          // start met een leeg scherm
 
   // Temperature sensor
   sensors.begin();                      // start het uitlezen van de temperatuur sensor
@@ -344,48 +320,13 @@ void updateLCD() {
 
 }
 
-// Functie om de data naar Adafruit.io te versturen
-void sendToAdafruit() {
-    if (!client.connected()) {
-    Serial.println("Attempting MQTT connection...");
-    // Attempt to connect
-    if (client.connect("", MQTT_USERNAME, MQTT_KEY)) {
-      Serial.println("connected");
-    } else {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
-    }
-  }
-
-  if (client.connected()) {
-    Serial.println("Publish data");
-    String d1 = (String)phValue;
-    d1.toCharArray(valueStr, 5);
-    client.publish(USERNAME PREAMBLE T_PHVALUES, valueStr);
-    String d2 = (String)temperatureValue;
-    d2.toCharArray(valueStr, 5);
-    client.publish(USERNAME PREAMBLE T_TEMPVALUES, valueStr);
-    String d3 = (String)temperatureMax;
-    d3.toCharArray(valueStr, 5);
-    client.publish(USERNAME PREAMBLE T_TEMPMAX, valueStr);
-    String d4 = (String)temperatureMin;
-    d4.toCharArray(valueStr, 5);
-    client.publish(USERNAME PREAMBLE T_TEMPMIN, valueStr);
-  }
-
-  client.loop();
-}
 
 void loop() {
-  yield();                     // nodig voor de ESP8266 connecties
+  io.run();
   currentMillis = millis();    // sla de huidige tijd op
   readPhValue();               // lees de PH sensor uit
   read1WireTemp();             // lees de 1-wire temperatuur sensor uit
   updateLCD();                 // werk indien nodig het LCD scherm bij
-  sendToAdafruit();                  // verstuur de data naar adafruit.io
+  phFeed->save(phValue);
   delay(5000);
-  
 }
