@@ -156,7 +156,10 @@ unsigned long previousMillis1Wire = 0;           // Tijdstip van laatste uitlezi
 AdafruitIO_WiFi io(IO_USERNAME, IO_KEY, WIFI_SSID, WIFI_PASS);
  
 // Create a feed object that allows us to send data to
-AdafruitIO_Feed *phFeed = io.feed("temperature");
+AdafruitIO_Feed *phFeed = io.feed("ph");
+AdafruitIO_Feed *temperatureFeed = io.feed("temperature");
+AdafruitIO_Feed *tempMinFeed = io.feed("tempmin");
+AdafruitIO_Feed *tempMaxFeed = io.feed("tempmax");
 
 //// ALGEMEEN ////
 
@@ -208,18 +211,21 @@ void read1WireTemp() {
     if(temperatureValue != readTemperatureValue) {
       temperatureValue = readTemperatureValue;
       redrawLCD = true;
+      temperatureFeed->save(temperatureValue);
     }
 
     // Controleer of de gelezen waarde groter is dan de opgeslagen max. temperatuur
     if (temperatureValue > temperatureMax) {
         temperatureMax = temperatureValue;
         redrawLCD = true;
+        tempMaxFeed->save(temperatureMax);
     }
 
     // Controleer of de gelezen waarde groter is dan de opgeslagen min. temperatuur
     if (temperatureValue < temperatureMin) {
         temperatureMin = temperatureValue;
         redrawLCD = true;
+        tempMinFeed->save(temperatureMin);
     }
 
     // sla het huidige tijdstip op in previousMillis1Wire
@@ -268,6 +274,7 @@ void readPhValue() {
     if (myPhValue != phValue) {
       phValue = myPhValue;     // werk PhValue bij met de nieuwe waarde
       redrawLCD = true;        // geef aan dat het LCD bijgewerkt moet worden
+      phFeed->save(phValue);
     }
 
     previousMillisPh = currentMillis;   // sla het huidige tijdstip op in previousMillisDHT
@@ -327,6 +334,5 @@ void loop() {
   readPhValue();               // lees de PH sensor uit
   read1WireTemp();             // lees de 1-wire temperatuur sensor uit
   updateLCD();                 // werk indien nodig het LCD scherm bij
-  phFeed->save(phValue);
   delay(5000);
 }
