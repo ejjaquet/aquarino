@@ -146,8 +146,8 @@ unsigned long previousMillis1Wire = 0;           // Tijdstip van laatste uitlezi
 //// WIFI (onboard ESP 8266) ////
 #include "AdafruitIO_WiFi.h"
  
-#define WIFI_SSID       "simplewifi"
-#define WIFI_PASS       "92546274353780287453"
+#define WIFI_SSID       "TELE2-2FCOE3_2.4G"
+#define WIFI_PASS       "2744C3775C5E"
  
 #define IO_USERNAME    "ejjaquet"
 #define IO_KEY         "4347a23da4b7433c9b42f519b2228ab2"
@@ -222,7 +222,7 @@ void read1WireTemp() {
     }
 
     // Controleer of de gelezen waarde groter is dan de opgeslagen min. temperatuur
-    if (temperatureValue < temperatureMin) {
+    if (temperatureValue < temperatureMin || temperatureMin == 0.00) {
         temperatureMin = temperatureValue;
         redrawLCD = true;
         tempMinFeed->save(temperatureMin);
@@ -262,7 +262,7 @@ void readPhValue() {
     for(int i=2;i<8;i++)
     avgValue+=buf[i];
     float pHVol=(float)avgValue*5.0/1024/6;
-    float myPhValue = -5.70 * pHVol + 21.34;
+    float myPhValue = pHVol + 2.34;
 
     // Controleer of de gelezen waarde een getal is (Nan = Not A Number)
     if (isnan(myPhValue)) {
@@ -294,30 +294,27 @@ void updateLCD() {
     lcd.setCursor(0, 0);         // zet de cursor op positie 1, regel 1
     lcd.write(0);                // teken het ph waarde icoon van geheugenpositie 0
     lcd.print(" ");              // schrijf een spatie
-    lcd.print(phValue);          // schrijf de huidige ph waarde
+    lcd.print(phValue, 1);          // schrijf de huidige ph waarde
 
     lcd.setCursor(0, 1);         // zet de cursor op positie 1, regel 2
     lcd.write(2);                // teken het thermometer icoon van geheugenpositie 2
     lcd.print(" ");
-    lcd.print(temperatureValue);
+    lcd.print(temperatureValue, 1);
     lcd.write(1);                // teken het graden icoon van geheugenpositie 1
-    lcd.print("C ");
 
-    lcd.setCursor(10, 0);        // zet de cursor op positie 11, regel 1
+    lcd.setCursor(8, 0);        // zet de cursor op positie 11, regel 1
     lcd.write(2);                // teken het thermometer icoon van geheugenpositie 2
     lcd.write(3);
     lcd.print(" ");
-    lcd.print(temperatureMax);
+    lcd.print(temperatureMax, 1);
     lcd.write(1);                // teken het graden icoon van geheugenpositie 1
-    lcd.print("C ");
 
-    lcd.setCursor(10, 1);        // zet de cursor op positie 11, regel 2
+    lcd.setCursor(8, 1);        // zet de cursor op positie 11, regel 2
     lcd.write(2);                // teken het thermometer icoon van geheugenpositie 2
     lcd.write(4);
     lcd.print(" ");
-    lcd.print(temperatureMin);
+    lcd.print(temperatureMin, 1);
     lcd.write(1);                // teken het graden icoon van geheugenpositie 1
-    lcd.print("C ");
 
     lcd.setCursor(0, 3);
   
