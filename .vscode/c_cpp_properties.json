@@ -1,0 +1,27 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "/home/ejjaquet/.arduino15/packages/esp8266/tools/**",
+                "/home/ejjaquet/.arduino15/packages/esp8266/hardware/esp8266/2.6.3/**",
+                "${workspaceFolder}/**",
+                "/home/ejjaquet/Arduino/libraries/**"
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": false,
+                "path": [
+                    "/home/ejjaquet/Arduino/libraries/**",
+                    "/home/ejjaquet/Arduino/libraries/LiquidCrystal_I2C"
+                ]
+            },
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64",
+            "forcedInclude": []
+        }
+    ],
+    "version": 4
+}

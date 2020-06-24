@@ -66,3 +66,12 @@ void readPhValue() {
 
   }
 }
+
+void checkPHValue() {
+  
+  if(phValue >int(phThresholdUpper)) {
+    Blynk.notify("Aquarino warning: PH value is too high!!");
+  } else if(phValue <int(phThresholdLower)) {
+    Blynk.notify("Aquarino warning: PH value is too low!!");
+  }  
+}

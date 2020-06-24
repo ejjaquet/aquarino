@@ -23,6 +23,8 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
+#include <EEPROM.h>
+
 void configModeCallback (WiFiManager *myWiFiManager) {
   Serial.println("Entered config mode");
   Serial.println(WiFi.softAPIP());

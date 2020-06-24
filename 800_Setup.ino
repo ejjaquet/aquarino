@@ -17,6 +17,9 @@ void setup() {
   setupLCD();
   setupDS18B20();
 
+  Serial.println("Setting up config values");
+  setupEEPRom();
+
   Serial.println("Setup is done. Initiating the loop...");
   Serial.println("=====================================");
 }
